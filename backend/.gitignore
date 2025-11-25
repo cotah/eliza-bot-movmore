@@ -1,0 +1,15 @@
+# Ignorar dependências
+node_modules/
+
+# Ignorar arquivo de ambiente
+backend/.env
+
+# Ignorar pasta de backup se você criou
+eliza_env_backup/
+
+# Logs
+*.log
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
