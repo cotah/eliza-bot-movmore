@@ -59,13 +59,18 @@ app.use((req, res, next) => {
 function validateContact(contact) {
   if (!contact) return false;
   
-  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+  // Regex mais flexível para telefones brasileiros
+  const phoneRegex = /^[\+]?[1-9][\d\s\-\(\)]{8,20}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
-  // Remove caracteres não numéricos para validar telefone
+  // Remove espaços e caracteres especiais, mas mantém o +
   const cleanContact = contact.replace(/[^\d+]/g, '');
   
-  return phoneRegex.test(cleanContact) || emailRegex.test(contact);
+  // Aceita telefones com 10-15 dígitos (incluindo DDD)
+  const isValidPhone = cleanContact.length >= 10 && cleanContact.length <= 15;
+  const isValidEmail = emailRegex.test(contact);
+  
+  return isValidPhone || isValidEmail;
 }
 
 // === OpenAI client ===
