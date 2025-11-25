@@ -1,15 +1,21 @@
-# Ignorar dependências
+# Environment
+.env
+.env.*
+
+# Node
 node_modules/
-
-# Ignorar arquivo de ambiente
-backend/.env
-
-# Ignorar pasta de backup se você criou
-eliza_env_backup/
 
 # Logs
 *.log
 
-# Arquivos temporários do sistema
+# System
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Backup files
+*.backup
+*~
