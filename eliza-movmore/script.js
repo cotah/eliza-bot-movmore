@@ -1,6 +1,6 @@
 // ============= CONFIG GERAL =============
 
-const API_BASE = "http://localhost:3001"; // trocar para URL do backend em produção
+const API_BASE = 'https://eliza-bot-movmore.onrender.com'; // trocar para URL do backend em produção
 
 const CLINIC_CONFIG = {
   name: "MovMore Clinic",
