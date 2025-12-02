@@ -162,7 +162,7 @@ app.post("/api/leads", async (req, res) => {
     // 🚀 ENVIAR ESSE LEAD PARA O N8N
     // =======================================
     try {
-      await fetch("https://btrix.app.n8n.cloud/webhook/btrix-pro-lead", {
+      await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
