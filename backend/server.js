@@ -155,16 +155,40 @@ app.post("/api/leads", async (req, res) => {
       createdAt: new Date().toISOString()
     };
 
+    // Salvar no banco local
     await saveLead(leadData);
 
-    // TODO: Implementar envio de notificação
-    console.log(`📧 Lead ${leadData.id} salvo com sucesso`);
+    // =======================================
+    // 🚀 ENVIAR ESSE LEAD PARA O N8N
+    // =======================================
+    try {
+      await fetch("https://btrix.app.n8n.cloud/webhook/btrix-pro-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: leadData.name,
+          phone: leadData.phone,
+          email: leadData.email || "",
+          message: leadData.message || "",
+          source: leadData.source || "site-bot",
+          type: "lead",
+          receivedAt: leadData.createdAt,
+        }),
+      });
+
+      console.log("🚀 Lead enviado para o n8n com sucesso!");
+    } catch (err) {
+      console.error("⚠️ ERRO ao enviar lead para o n8n:", err.message);
+      // Não quebra o fluxo para o usuário
+    }
+    // =======================================
 
     return res.json({
       ok: true,
       message: "Lead recebido com sucesso",
       leadId: leadData.id
     });
+
   } catch (error) {
     console.error("Erro ao receber lead:", error);
     return res.status(500).json({
@@ -173,6 +197,7 @@ app.post("/api/leads", async (req, res) => {
     });
   }
 });
+
 
 // ---- 3) Disponibilidade de horários por dia ----
 // GET /api/availability?date=2025-12-12
