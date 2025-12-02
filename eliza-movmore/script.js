@@ -1961,6 +1961,26 @@ async function finalizeBooking() {
 
     if (data.ok) {
       const bookingId = data.appointmentId;
+         // 🚀 AVISAR O N8N QUE TEVE UM NOVO AGENDAMENTO
+   try {
+     await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({
+         name: botState.appointment.name,
+         contact: botState.appointment.contact || null,
+         treatmentName: botState.appointment.treatment?.name || null,
+         date: botState.appointment.date,
+         time: botState.appointment.time,
+         bookingId,
+         source: "eliza-bot",
+       }),
+     });
+
+     console.log("✅ Lead enviado para o n8n");
+   } catch (err) {
+     console.error("❌ Erro ao enviar lead para o n8n:", err);
+   }
 
       // 1º balão – número da reserva
       const msg = tx("bookingConfirmed").replace("{id}", bookingId);
