@@ -295,32 +295,35 @@ app.post("/api/appointments", async (req, res) => {
 
     console.log("📅 NOVO AGENDAMENTO:", appointment);
 
-const priceForN8n =
-  appointment.treatmentPrice ??
-  appointment.totalPrice ??
-  appointment.price ??
-  null;
+console.log("📅 NOVO AGENDAMENTO:", appointment);
 
-console.log("💰 PRICE FOR N8N:", priceForN8n);
+// 1. Primeiro, descubra qual campo tem o preço
+console.log("🔍 DADOS QUE CHEGARAM:", req.body);
 
+// 2. Pegue o preço DO BODY (não do appointment)
+const totalFromBody = req.body.total ?? req.body.treatmentPrice ?? req.body.price ?? null;
+console.log("💰 PREÇO ENCONTRADO NO BODY:", totalFromBody);
+
+// 3. Use esse preço para enviar ao n8n
 try {
-  await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
+  await fetch("https://btrk.app.n8n.cloud/webhook/bot-lead", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name: appointment.name,
       contact: appointment.contact,
       treatmentName: appointment.treatmentName,
-      treatmentPrice: priceForN8n,
+      treatmentPrice: totalFromBody,  // ← MANDO O PREÇO AQUI!
       date: appointment.date,
       time: appointment.time,
-      bookingId: appointment.id
+      bookingId: appointment.id,
+      source: "eliza-bot"
     }),
   });
 
-  console.log("🚀 Appointment enviado para o n8n!");
+  console.log("✅ Appointment enviado para o n8n com preço:", totalFromBody);
 } catch (err) {
-  console.error("⚠️ ERRO ao enviar appointment:", err.message);
+  console.error("❌ ERRO ao enviar appointment:", err.message);
 }
 
     return res.json({
