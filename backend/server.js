@@ -306,7 +306,7 @@ console.log("💰 PREÇO ENCONTRADO NO BODY:", totalFromBody);
 
 // 3. Use esse preço para enviar ao n8n
 try {
-  await fetch("https://btrk.app.n8n.cloud/webhook/bot-lead", {
+  await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
