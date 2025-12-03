@@ -1934,24 +1934,43 @@ async function finalizeBooking() {
 
     const total = ap.total || (ap.treatment ? ap.treatment.price : null);
 
-const payload = {
-  sourceBot: "Eliza",
-  sourceVertical: "Aesthetic Clinic",
-  clinicName: CLINIC_CONFIG.name,
-  language: botState.lang,
-  category: ap.category || null,
-  treatmentName: safeTreatmentName,
+const treatmentNames = [];
+    if (ap.treatment && ap.treatment.name) {
+      treatmentNames.push(ap.treatment.name);
+    }
+    if (Array.isArray(ap.extraTreatments)) {
+      ap.extraTreatments.forEach(t => {
+        if (t && t.name) treatmentNames.push(t.name);
+      });
+    }
+    if (ap.upsell && ap.upsell.upsell) {
+      treatmentNames.push(ap.upsell.upsell);
+    }
+    if (ap.aiUpsell && ap.aiUpsell.name) {
+      treatmentNames.push(ap.aiUpsell.name);
+    }
+    const fullTreatmentList = treatmentNames.join(" + ");
 
-  // 👇 agora mandamos o TOTAL real
-  treatmentPrice: total,
-  total: total,
+    const payload = {
+      sourceBot: "Eliza",
+      sourceVertical: "Aesthetic Clinic",
+      clinicName: CLINIC_CONFIG.name,
+      language: botState.lang,
+      category: ap.category || null,
+      
+      // AQUI ESTÁ A MUDANÇA PRINCIPAL:
+      // Enviamos a lista completa em vez de apenas o primeiro tratamento.
+      treatmentName: fullTreatmentList, 
 
-  name: safeName,
-  date: safeDate,
-  time: safeTime,
-  contact: ap.contact || null,
-  sourceUrl: window.location.href,
-};
+      treatmentPrice: total,
+      total: total,
+
+      name: safeName,
+      date: safeDate,
+      time: safeTime,
+      contact: ap.contact || null,
+      sourceUrl: window.location.href,
+    };
 
 
     console.log("📤 Enviando booking:", payload);
@@ -1969,32 +1988,7 @@ const payload = {
     if (data.ok) {
       const bookingId = data.appointmentId;
          // 🚀 AVISAR O N8N QUE TEVE UM NOVO AGENDAMENTO
-    try {
-     await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
-       method: "POST",
-       headers: { "Content-Type": "application/json" },
-       body: JSON.stringify({
-         name: botState.appointment.name,
-         contact: botState.appointment.contact || null,
-         treatmentName: botState.appointment.treatment?.name || null,
-         
-         treatmentName: treatmentList,
-
-         // ✅ LINHA ADICIONADA:
-         treatmentPrice: botState.appointment.total,
-
-         date: botState.appointment.date,
-         time: botState.appointment.time,
-         bookingId,
-         source: "eliza-bot",
-       } ),
-     });
-
-     console.log("✅ Lead enviado para o n8n com o preço:", treatmentList);
-   } catch (err) {
-     console.error("❌ Erro ao enviar lead para o n8n:", err);
-   }
-
+   
 
       // 1º balão – número da reserva
       const msg = tx("bookingConfirmed").replace("{id}", bookingId);
