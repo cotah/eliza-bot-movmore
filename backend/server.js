@@ -166,13 +166,15 @@ app.post("/api/leads", async (req, res) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: leadData.name,
-          phone: leadData.phone,
-          email: leadData.email || "",
-          message: leadData.message || "",
-          source: leadData.source || "site-bot",
-          type: "lead",
-          receivedAt: leadData.createdAt,
+        name: leadData.name,
+        phone: leadData.phone,
+        email: leadData.email || "",
+        message: leadData.message || "",
+        treatmentName: leadData.treatmentName || null,
+        treatmentPrice: leadData.treatmentPrice || null,
+        source: leadData.source || "site-bot",
+        type: "lead",
+        receivedAt: leadData.createdAt,
         }),
       });
 
@@ -292,7 +294,25 @@ app.post("/api/appointments", async (req, res) => {
     await saveAppointment(appointment);
 
     console.log("📅 NOVO AGENDAMENTO:", appointment);
+    try {
+  await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: appointment.name,
+      contact: appointment.contact,
+      treatmentName: appointment.treatmentName,
+      treatmentPrice: appointment.treatmentPrice,
+      date: appointment.date,
+      time: appointment.time,
+      bookingId: appointment.id
+    }),
+  });
 
+  console.log("🚀 Appointment enviado para o n8n!");
+} catch (err) {
+  console.error("⚠️ ERRO ao enviar appointment:", err.message);
+}
     return res.json({
       ok: true,
       appointmentId: appointment.id,
