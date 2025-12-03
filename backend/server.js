@@ -135,67 +135,102 @@ app.get("/api/health", (req, res) => {
 });
 
 // ---- 2) Leads genéricos (marketing + pré-avaliação) ----
-app.post("/api/leads", async (req, res) => {
+app.post("/api/appointments", async (req, res) => {
   try {
-    const lead = req.body;
+    const body = req.body;
 
-    console.log("🔥 NOVO LEAD RECEBIDO:", lead);
+    const {
+      sourceBot,
+      sourceVertical,
+      clinicName,
+      language,
+      category,
+      treatmentName,
+      treatmentPrice,
+      name,
+      date,
+      time,
+      contact,
+      sourceUrl,
+    } = body;
 
-    // Validação básica
-    if (!lead.name || !lead.phone) {
+    // Validações
+    if (!name || !date || !time || !treatmentName) {
       return res.status(400).json({
         ok: false,
-        error: "Nome e telefone são obrigatórios",
+        error: "Missing required fields (name, date, time, treatmentName)",
       });
     }
 
-    const leadData = {
-      ...lead,
+    if (!validateContact(contact)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Contact must be a valid phone number or email",
+      });
+    }
+
+    const availableSlots = await getAvailableSlotsForDate(date);
+    if (!availableSlots.includes(time)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Selected slot is not available anymore",
+      });
+    }
+
+    const appointment = {
       id: Date.now().toString(),
-      createdAt: new Date().toISOString()
+      sourceBot: sourceBot || "Eliza",
+      sourceVertical: sourceVertical || "Aesthetic Clinic",
+      clinicName: clinicName || "MovMore Clinic",
+      language: language || "pt",
+      category: category || null,
+      treatmentName,
+      // aqui a gente só guarda o que veio do front
+      treatmentPrice: treatmentPrice ?? null,
+      name: name.trim(),
+      date,
+      time,
+      contact: contact.trim(),
+      sourceUrl: sourceUrl || null,
+      status: "pending_payment"
     };
 
-    // Salvar no banco local
-    await saveLead(leadData);
+    await saveAppointment(appointment);
 
-    // =======================================
-    // 🚀 ENVIAR ESSE LEAD PARA O N8N
-    // =======================================
+    console.log("📅 NOVO AGENDAMENTO:", appointment);
+
+    // 🔹 Enviar esse agendamento para o n8n (simples e direto)
     try {
       await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-        name: leadData.name,
-        phone: leadData.phone,
-        email: leadData.email || "",
-        message: leadData.message || "",
-        treatmentName: leadData.treatmentName || null,
-        treatmentPrice: leadData.treatmentPrice || null,
-        source: leadData.source || "site-bot",
-        type: "lead",
-        receivedAt: leadData.createdAt,
+          name: appointment.name,
+          contact: appointment.contact,
+          treatmentName: appointment.treatmentName,
+          treatmentPrice: appointment.treatmentPrice, // ← VAI O QUE VEIO DO FRONT
+          date: appointment.date,
+          time: appointment.time,
+          bookingId: appointment.id,
+          source: "eliza-bot"
         }),
       });
 
-      console.log("🚀 Lead enviado para o n8n com sucesso!");
+      console.log("🚀 Appointment enviado para o n8n!");
     } catch (err) {
-      console.error("⚠️ ERRO ao enviar lead para o n8n:", err.message);
-      // Não quebra o fluxo para o usuário
+      console.error("⚠️ ERRO ao enviar appointment para n8n:", err.message);
     }
-    // =======================================
 
     return res.json({
       ok: true,
-      message: "Lead recebido com sucesso",
-      leadId: leadData.id
+      appointmentId: appointment.id,
+      appointment: appointment
     });
-
   } catch (error) {
-    console.error("Erro ao receber lead:", error);
+    console.error("Erro em /api/appointments:", error);
     return res.status(500).json({
       ok: false,
-      error: "Erro interno do servidor",
+      error: error.message || "Unexpected error",
     });
   }
 });
