@@ -1932,20 +1932,27 @@ async function finalizeBooking() {
     // Atualiza no estado (especialmente o name)
     botState.appointment.name = safeName;
 
-    const payload = {
-      sourceBot: "Eliza",
-      sourceVertical: "Aesthetic Clinic",
-      clinicName: CLINIC_CONFIG.name,
-      language: botState.lang,
-      category: ap.category || null,
-      treatmentName: safeTreatmentName,
-      treatmentPrice: ap.treatment ? ap.treatment.price : null,
-      name: safeName,
-      date: safeDate,
-      time: safeTime,
-      contact: ap.contact || null,
-      sourceUrl: window.location.href,
-    };
+    const total = ap.total || (ap.treatment ? ap.treatment.price : null);
+
+const payload = {
+  sourceBot: "Eliza",
+  sourceVertical: "Aesthetic Clinic",
+  clinicName: CLINIC_CONFIG.name,
+  language: botState.lang,
+  category: ap.category || null,
+  treatmentName: safeTreatmentName,
+
+  // 👇 agora mandamos o TOTAL real
+  treatmentPrice: total,
+  total: total,
+
+  name: safeName,
+  date: safeDate,
+  time: safeTime,
+  contact: ap.contact || null,
+  sourceUrl: window.location.href,
+};
+
 
     console.log("📤 Enviando booking:", payload);
 
