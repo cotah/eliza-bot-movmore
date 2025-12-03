@@ -294,7 +294,16 @@ app.post("/api/appointments", async (req, res) => {
     await saveAppointment(appointment);
 
     console.log("📅 NOVO AGENDAMENTO:", appointment);
-    try {
+
+const priceForN8n =
+  appointment.treatmentPrice ??
+  appointment.totalPrice ??
+  appointment.price ??
+  null;
+
+console.log("💰 PRICE FOR N8N:", priceForN8n);
+
+try {
   await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -302,7 +311,7 @@ app.post("/api/appointments", async (req, res) => {
       name: appointment.name,
       contact: appointment.contact,
       treatmentName: appointment.treatmentName,
-      treatmentPrice: appointment.treatmentPrice,
+      treatmentPrice: priceForN8n,
       date: appointment.date,
       time: appointment.time,
       bookingId: appointment.id
@@ -313,6 +322,7 @@ app.post("/api/appointments", async (req, res) => {
 } catch (err) {
   console.error("⚠️ ERRO ao enviar appointment:", err.message);
 }
+
     return res.json({
       ok: true,
       appointmentId: appointment.id,
