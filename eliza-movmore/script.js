@@ -1978,6 +1978,8 @@ const payload = {
          contact: botState.appointment.contact || null,
          treatmentName: botState.appointment.treatment?.name || null,
          
+         treatmentName: treatmentList,
+
          // ✅ LINHA ADICIONADA:
          treatmentPrice: botState.appointment.total,
 
@@ -1988,7 +1990,7 @@ const payload = {
        } ),
      });
 
-     console.log("✅ Lead enviado para o n8n com o preço:", botState.appointment.total);
+     console.log("✅ Lead enviado para o n8n com o preço:", treatmentList);
    } catch (err) {
      console.error("❌ Erro ao enviar lead para o n8n:", err);
    }
