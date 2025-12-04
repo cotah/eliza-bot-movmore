@@ -2169,13 +2169,18 @@ async function capturePreEvaluationLead() {
       sourceUrl: window.location.href
     };
 
+    console.log('📤 Enviando lead para API:', payload);
+
     const response = await fetch(`${API_BASE}/api/leads`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
     });
 
+    console.log('📥 Resposta da API - Status:', response.status);
+
     const data = await response.json();
+    console.log('📥 Resposta da API - Data:', data);
 
     if (data.ok) {
       // 1ª mensagem: confirmação de que temos as informações
@@ -2192,10 +2197,11 @@ async function capturePreEvaluationLead() {
       
       botState.step = "pre_eval_ask_more_help";
     } else {
+      console.error('❌ API retornou erro:', data.error);
       addMessage(tx('errorCapturingLead'));
     }
   } catch (error) {
-    console.error("Error capturing lead:", error);
+    console.error("❌ Error capturing lead:", error);
     addMessage(tx('errorCapturingLead'));
   }
 }

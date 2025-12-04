@@ -511,6 +511,91 @@ app.get("/api/appointments", async (req, res) => {
   }
 });
 
+// ---- 6.5) Rota para capturar leads (pré-avaliação e marketing) ----
+app.post("/api/leads", async (req, res) => {
+  try {
+    const body = req.body;
+
+    const {
+      type,           // "pre_evaluation" ou "marketing"
+      clinicName,
+      language,
+      name,
+      phone,
+      email,
+      goal,
+      concern,
+      age,
+      reason,
+      sourceUrl
+    } = body;
+
+    // Validação básica
+    if (!name || !email) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing required fields (name, email)"
+      });
+    }
+
+    const lead = {
+      id: Date.now().toString(),
+      type: type || "pre_evaluation",
+      clinicName: clinicName || "MovMore Clinic",
+      language: language || "pt",
+      name: name.trim(),
+      phone: phone ? phone.trim() : null,
+      email: email.trim(),
+      goal: goal || null,
+      concern: concern || null,
+      age: age || null,
+      reason: reason || null,
+      sourceUrl: sourceUrl || null,
+      createdAt: new Date().toISOString()
+    };
+
+    await saveLead(lead);
+
+    console.log("📝 NOVO LEAD CAPTURADO:", lead);
+
+    // Enviar lead para n8n
+    try {
+      await fetch("https://btrix.app.n8n.cloud/webhook/bot-lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: lead.type,
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          goal: lead.goal,
+          concern: lead.concern,
+          age: lead.age,
+          reason: lead.reason,
+          leadId: lead.id,
+          source: "eliza-bot-pre-eval"
+        }),
+      });
+
+      console.log("🚀 Lead enviado para o n8n!");
+    } catch (err) {
+      console.error("⚠️ ERRO ao enviar lead para n8n:", err.message);
+    }
+
+    return res.json({
+      ok: true,
+      leadId: lead.id,
+      lead: lead
+    });
+  } catch (error) {
+    console.error("Erro em POST /api/leads:", error);
+    return res.status(500).json({
+      ok: false,
+      error: error.message || "Unexpected error"
+    });
+  }
+});
+
 // ---- 7) Rota para obter leads (admin) ----
 app.get("/api/leads", async (req, res) => {
   try {
