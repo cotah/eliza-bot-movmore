@@ -116,6 +116,11 @@ const COPY = {
     preAskPhone: "Your WhatsApp number:",
     preAskEmail: "Your email address:",
     preLeadCaptured: "Perfect! Our team will analyze your information and contact you shortly with your personalized pre-evaluation. ✨",
+    preConfirmation: "Great! We have all the necessary information and will get back to you as soon as possible. ✨",
+    preAskMoreHelp: "Can I help you with anything else?",
+    preYesMoreHelp: "Yes, I need help",
+    preNoThanks: "No, thank you",
+    preFinalThanks: "Thank you for contacting MovMore Clinic! See you soon. ✨",
 
     // Indicador de digitação
     typing: "Eliza is typing...",
@@ -231,6 +236,11 @@ const COPY = {
     preAskPhone: "Seu número de WhatsApp:",
     preAskEmail: "Seu endereço de e-mail:",
     preLeadCaptured: "Perfeito! Nossa equipe vai analisar suas informações e entrar em contato em breve com sua pré-avaliação personalizada. ✨",
+    preConfirmation: "Ótimo! Já temos todas as informações necessárias e retornaremos o mais breve possível. ✨",
+    preAskMoreHelp: "Posso te ajudar em mais alguma coisa?",
+    preYesMoreHelp: "Sim, preciso de ajuda",
+    preNoThanks: "Não, obrigado(a)",
+    preFinalThanks: "Obrigada por entrar em contato com a MovMore Clinic! Até breve. ✨",
 
     // Indicador de digitação
     typing: "Eliza está digitando...",
@@ -347,6 +357,11 @@ const COPY = {
     preAskPhone: "Tu número de WhatsApp:",
     preAskEmail: "Tu dirección de correo electrónico:",
     preLeadCaptured: "¡Perfecto! Nuestro equipo analizará tu información y se pondrá en contacto pronto con tu pre-evaluación personalizada. ✨",
+    preConfirmation: "¡Excelente! Ya tenemos toda la información necesaria y te responderemos lo antes posible. ✨",
+    preAskMoreHelp: "¿Puedo ayudarte en algo más?",
+    preYesMoreHelp: "Sí, necesito ayuda",
+    preNoThanks: "No, gracias",
+    preFinalThanks: "¡Gracias por contactar con MovMore Clinic! Hasta pronto. ✨",
 
     // Indicador de digitación
     typing: "Eliza está escribiendo...",
@@ -1320,6 +1335,21 @@ function handleAction(action) {
     botState.step = "complete";
     return;
   }
+
+  // Pré-avaliação - Pergunta se quer mais ajuda - SIM
+  if (action === "pre_eval_more_help_yes") {
+    botState.step = "main_menu";
+    showMainMenu();
+    return;
+  }
+
+  // Pré-avaliação - Pergunta se quer mais ajuda - NÃO
+  if (action === "pre_eval_more_help_no") {
+    addMessage(tx('preFinalThanks'));
+    clearQuickReplies();
+    botState.step = "complete";
+    return;
+  }
 }
 
 // ============= CATEGORIAS =============
@@ -2148,12 +2178,19 @@ async function capturePreEvaluationLead() {
     const data = await response.json();
 
     if (data.ok) {
-      addMessage(tx('preLeadCaptured'));
+      // 1ª mensagem: confirmação de que temos as informações
+      addMessage(tx('preConfirmation'));
+      
+      // 2ª mensagem: pergunta se pode ajudar em mais alguma coisa
+      addMessage(tx('preAskMoreHelp'));
+      
+      // Botões de resposta
       addQuickReplies([
-        {label: tx('mBack'), action: "menu_home"},
-        {label: tx('finish'), action: "finish_chat"}
+        {label: tx('preYesMoreHelp'), action: "pre_eval_more_help_yes"},
+        {label: tx('preNoThanks'), action: "pre_eval_more_help_no"}
       ]);
-      botState.step = "pre_eval_complete";
+      
+      botState.step = "pre_eval_ask_more_help";
     } else {
       addMessage(tx('errorCapturingLead'));
     }
